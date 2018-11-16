@@ -1,0 +1,11 @@
+export OS_PROJECT_DOMAIN_NAME=default
+export OS_USER_DOMAIN_NAME=default
+export OS_PROJECT_NAME=default
+export OS_USERNAME=username
+export OS_PASSWORD='topsecret'
+export OS_AUTH_URL='https://auth.url.net:35357'
+export OS_REGION_NAME='region1'
+export OS_IDENTITY_API_VERSION=3
+export OS_IMAGE_API_VERSION=2
+export OS_ENDPOINT_TYPE=internal
+export OS_INTERFACE=internal

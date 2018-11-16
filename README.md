@@ -50,29 +50,44 @@ if you want to run exporter on host itself
 python
 libvirt-python==3.7.0
 prometheus-client==0.0.21
-```
-if you want to run exporter in docker container
-```
-docker
-docker-compose
+python-novaclient==7.1.0
+python-keystoneclient==3.10.0
 ```
 ### Installing
 
 if you want to run exporter on host itself
 ```
-git clone https://github.com/beylistan/prometheus_libvirt_exporter.git
+git clone https://github.com/syyeleven/prometheus_libvirt_exporter.git
 pip install -r requirements.txt
-```
-if you want to run exporter in docker container
-```
-docker pull beylistan/prometheus_libvirt_exporter
 ```
 ### Running
 if you want to run exporter on host itself
 ```
+source source.rc
+
 python libvirt_exporter.py -h
 usage: libvirt_exporter.py [-h] [-si SCRAPE_INTERVAL]
-                           [-uri UNIFORM_RESOURCE_IDENTIFIER]
+                           [-uri UNIFORM_RESOURCE_IDENTIFIER] [-v]
+                           [--no-disable] [--region REGION]
+                           [--os-interface <interface>] [--insecure]
+                           [--os-cacert <ca-certificate>]
+                           [--os-cert <certificate>] [--os-key <key>]
+                           [--timeout <seconds>] [--os-auth-plugin <name>]
+                           [--os-auth-url OS_AUTH_URL]
+                           [--os-domain-id OS_DOMAIN_ID]
+                           [--os-domain-name OS_DOMAIN_NAME]
+                           [--os-tenant-id OS_TENANT_ID]
+                           [--os-tenant-name OS_TENANT_NAME]
+                           [--os-project-id OS_PROJECT_ID]
+                           [--os-project-name OS_PROJECT_NAME]
+                           [--os-project-domain-id OS_PROJECT_DOMAIN_ID]
+                           [--os-project-domain-name OS_PROJECT_DOMAIN_NAME]
+                           [--os-trust-id OS_TRUST_ID]
+                           [--os-user-id OS_USER_ID]
+                           [--os-username OS_USERNAME]
+                           [--os-user-domain-id OS_USER_DOMAIN_ID]
+                           [--os-user-domain-name OS_USER_DOMAIN_NAME]
+                           [--os-password OS_PASSWORD]
 
 libvirt_exporter scrapes domains metrics from libvirt daemon
 
@@ -82,14 +97,58 @@ optional arguments:
                         scrape interval for metrics in seconds
   -uri UNIFORM_RESOURCE_IDENTIFIER, --uniform_resource_identifier UNIFORM_RESOURCE_IDENTIFIER
                         Libvirt Uniform Resource Identifier
+  -v, --verbose
+  --no-disable
+  --region REGION
+  --os-interface <interface>
+                        Select an interface type. Valid interface types:
+                        [admin, public, internal]. (Env: OS_INTERFACE)
+  --insecure            Explicitly allow client to perform "insecure" TLS
+                        (https) requests. The server's certificate will not be
+                        verified against any certificate authorities. This
+                        option should be used with caution.
+  --os-cacert <ca-certificate>
+                        Specify a CA bundle file to use in verifying a TLS
+                        (https) server certificate. Defaults to
+                        env[OS_CACERT].
+  --os-cert <certificate>
+                        Defaults to env[OS_CERT].
+  --os-key <key>        Defaults to env[OS_KEY].
+  --timeout <seconds>   Set request timeout (in seconds).
+  --os-auth-plugin <name>
+                        The auth plugin to load
 
-```
-if you want to run exporter in docker container
-```
-docker run --privileged -dp 9177:9177 \
-    -v /var/run/libvirt/libvirt-sock:/var/run/libvirt/libvirt-sock \
-    --name libvirt_exporter beylistan/libvirt_exporter \
-    python3 libvirt_exporter.py [-si SCRAPE_INTERVAL] [-uri UNIFORM_RESOURCE_IDENTIFIER]
-```
+Authentication Options:
+  Options specific to the password plugin.
 
-
+  --os-auth-url OS_AUTH_URL
+                        Authentication URL
+  --os-domain-id OS_DOMAIN_ID
+                        Domain ID to scope to
+  --os-domain-name OS_DOMAIN_NAME
+                        Domain name to scope to
+  --os-tenant-id OS_TENANT_ID
+                        Tenant ID to scope to
+  --os-tenant-name OS_TENANT_NAME
+                        Tenant name to scope to
+  --os-project-id OS_PROJECT_ID
+                        Project ID to scope to
+  --os-project-name OS_PROJECT_NAME
+                        Project name to scope to
+  --os-project-domain-id OS_PROJECT_DOMAIN_ID
+                        Domain ID containing project
+  --os-project-domain-name OS_PROJECT_DOMAIN_NAME
+                        Domain name containing project
+  --os-trust-id OS_TRUST_ID
+                        Trust ID
+  --os-user-id OS_USER_ID
+                        User id
+  --os-username OS_USERNAME, --os-user_name OS_USERNAME
+                        Username
+  --os-user-domain-id OS_USER_DOMAIN_ID
+                        User's domain id
+  --os-user-domain-name OS_USER_DOMAIN_NAME
+                        User's domain name
+  --os-password OS_PASSWORD
+                        User's password
+```

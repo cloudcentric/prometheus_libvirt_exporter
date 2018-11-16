@@ -1,2 +1,4 @@
 libvirt-python==3.7.0
 prometheus-client==0.0.21
+python-novaclient==7.1.0
+python-keystoneclient==3.10.0
