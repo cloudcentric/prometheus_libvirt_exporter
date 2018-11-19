@@ -1,0 +1,5 @@
+prometheus-libvirt-exporter (0.1+syseleven1) xenial; urgency=medium
+
+  * Initial release
+
+ -- Benjamin Reichel <b.reichel@syseleven.de>  Thu, 19 Nov 2018 23:13:51 -0300

@@ -1,0 +1,13 @@
+[Unit]
+Description=libvirt exporter for prometheus
+Documentation=https://github.com/syseleven/prometheus_libvirt_exporter
+
+[Service]
+Restart=always
+ExecStart=/usr/bin/prometheus-libvirt-exporter
+ExecReload=/bin/kill -HUP $MAINPID
+TimeoutStopSec=20s
+SendSIGKILL=no
+
+[Install]
+WantedBy=multi-user.target

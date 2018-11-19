@@ -1,0 +1,2 @@
+prometheus-libvirt-exporter usr/bin/
+libvirt_exporter.py usr/bin/
