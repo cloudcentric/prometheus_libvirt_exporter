@@ -15,4 +15,4 @@ set -u
 . /etc/openstack/nova-openrc.sh
 
 # start prometheus-libvirt-exporter
-python3 /usr/bin/libvirt_exporter.py 
+python /usr/bin/libvirt_exporter.py 

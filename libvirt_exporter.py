@@ -64,8 +64,8 @@ def update_tenant_name_instance_relation():
         server = nova.servers.list(search_opts={"all_tenants": 1, "host": hostname})
 
         for srv in server:
-		project = keystone.projects.get(srv.tenant_id)
-                tenant_name_instance_cache[srv.id] = project.name
+             project = keystone.projects.get(srv.tenant_id)
+             tenant_name_instance_cache[srv.id] = project.name
 
         print(tenant_name_instance_cache)
 
