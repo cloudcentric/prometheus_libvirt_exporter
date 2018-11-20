@@ -1,2 +1,3 @@
+source.rc etc/openstack/
 prometheus-libvirt-exporter usr/bin/
 libvirt_exporter.py usr/bin/

@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-# Check that local time is the same on all nodes in a Quobyte cluster.
-
 # Stop the script when a command fails.
 set -e
 
@@ -12,7 +10,7 @@ set -o pipefail
 set -u
 
 # Get openstack credentials
-. /etc/openstack/nova-openrc.sh
+. /etc/openstack/source.rc
 
 # start prometheus-libvirt-exporter
 python /usr/bin/libvirt_exporter.py 
