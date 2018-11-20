@@ -4,16 +4,86 @@ import argparse
 import libvirt
 import sched
 import time
+import os
+import socket
 from prometheus_client import start_http_server, Gauge
 from xml.etree import ElementTree
 
+import keystoneclient.session
+import keystoneclient.client
+import novaclient.client
+import novaclient.exceptions
 
 parser = argparse.ArgumentParser(description='libvirt_exporter scrapes domains metrics from libvirt daemon')
 parser.add_argument('-si','--scrape_interval', help='scrape interval for metrics in seconds', default= 5)
 parser.add_argument('-uri','--uniform_resource_identifier', help='Libvirt Uniform Resource Identifier', default= "qemu:///system")
+
+parser.add_argument("-v", "--verbose", action="count")
+parser.add_argument("--no-disable", default=False, action="store_true")
+parser.add_argument("--region", default=os.environ.get('OS_REGION_NAME'))
+parser.add_argument(
+    '--os-interface',
+    metavar='<interface>',
+    dest='interface',
+    choices=['admin', 'public', 'internal'],
+    default=os.environ.get('OS_INTERFACE', 'admin'),
+    help=('Select an interface type.'
+          ' Valid interface types: [admin, public, internal].'
+          ' (Env: OS_INTERFACE)'),
+)
+
+keystoneclient.session.Session.register_cli_options(parser)
+keystoneclient.auth.register_argparse_arguments(
+    parser, sys.argv[1:], default="password")
+args_os = parser.parse_args()
+auth = keystoneclient.auth.load_from_argparse_arguments(args_os)
+keystonesession = keystoneclient.session.Session.load_from_cli_options(args_os, auth=auth)
+keystone = keystoneclient.client.Client(auth_url=auth.auth_url, session=keystonesession, interface=args_os.interface)
+nova = novaclient.client.Client("2", session=keystonesession, interface=args_os.interface, region_name=args_os.region)
+
+
 args = vars(parser.parse_args())
 uri = args["uniform_resource_identifier"]
 
+tenant_instance_cache = {}
+tenant_name_instance_cache = {}
+
+def update_tenant_instance_relation():
+
+	hostname = socket.gethostbyaddr(socket.gethostname())[0]
+	server = nova.servers.list(search_opts={"all_tenants": 1, "host": hostname})
+
+	for srv in server:
+		tenant_instance_cache[srv.id] = srv.tenant_id
+
+	print(tenant_instance_cache)
+
+def update_tenant_name_instance_relation():
+
+        hostname = socket.gethostbyaddr(socket.gethostname())[0]
+        server = nova.servers.list(search_opts={"all_tenants": 1, "host": hostname})
+
+        for srv in server:
+             project = keystone.projects.get(srv.tenant_id)
+             tenant_name_instance_cache[srv.id] = project.name
+
+        print(tenant_name_instance_cache)
+
+def get_tenant(uuid):
+
+    try:
+        tenant_id = tenant_instance_cache[uuid]
+    except KeyError as e:
+        tenant_id = None
+    return tenant_id
+
+def get_tenant_name(uuid):
+
+    try:
+        tenant_name = tenant_name_instance_cache[uuid]
+    except KeyError as e:
+        tenant_name = None
+    return tenant_name
 
 def connect_to_uri(uri):
     conn = libvirt.open(uri)
@@ -44,9 +114,12 @@ def get_domains(conn):
         return domains
 
 
-def get_metrics_collections(metric_names, labels, stats):
+def get_metrics_collections(dom, metric_names, labels, stats):
     dimensions = []
     metrics_collection = {}
+
+    labels['project_id'] = get_tenant(dom.UUIDString())
+    labels['project_name'] = get_tenant_name(dom.UUIDString())
 
     for mn in metric_names:
         if type(stats) is list:
@@ -73,6 +146,9 @@ def get_metrics_multidim_collections(dom, metric_names, device):
         for target in targets:
             labels = {'domain': dom.name()}
             labels['target_device'] = target
+            labels['uuid'] = dom.UUIDString()
+            labels['project_id'] = get_tenant(dom.UUIDString())
+            labels['project_name'] = get_tenant_name(dom.UUIDString())
             if device == "interface":
                 stats = dom.interfaceStats(target) # !
             elif device == "disk":
@@ -94,13 +170,13 @@ def add_metrics(dom, header_mn, g_dict):
 
         stats = dom.getCPUStats(True)
         metric_names = stats[0].keys()
-        metrics_collection = get_metrics_collections(metric_names, labels, stats)
+        metrics_collection = get_metrics_collections(dom, metric_names, labels, stats)
         unit = "_nanosecs"
 
     elif header_mn == "libvirt_mem_stats_":
         stats = dom.memoryStats()
         metric_names = stats.keys()
-        metrics_collection = get_metrics_collections(metric_names, labels, stats)
+        metrics_collection = get_metrics_collections(dom, metric_names, labels, stats)
         unit = ""
 
     elif header_mn == "libvirt_block_stats_":
@@ -175,6 +251,11 @@ def job(uri, g_dict, scheduler):
     print('FINISH JOB :', time.time())
     scheduler.enter((int(args["scrape_interval"])), 1, job, (uri, g_dict, scheduler))
 
+def update_tenant(scheduler):
+    print('Start updating tenant information', time.time())
+    update_tenant_instance_relation()
+    update_tenant_name_instance_relation()
+    scheduler.enter(int(args["scrape_interval"])*3600, 2, update_tenant, (scheduler,))
 
 def main():
 
@@ -184,7 +265,8 @@ def main():
 
     scheduler = sched.scheduler(time.time, time.sleep)
     print('START:', time.time())
-    scheduler.enter(0, 1, job, (uri, g_dict, scheduler))
+    update_tenant(scheduler)
+    job(uri, g_dict, scheduler)
     scheduler.run()
 
 if __name__ == '__main__':

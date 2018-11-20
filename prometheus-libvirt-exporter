@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+
+# Stop the script when a command fails.
+set -e
+
+# Stop the script when a pipeline fails.
+set -o pipefail
+
+# Forbid the use of unset variables in string substitutions.
+set -u
+
+# Get openstack credentials
+. /etc/openstack/source.rc
+
+# start prometheus-libvirt-exporter
+python /usr/bin/libvirt_exporter.py 

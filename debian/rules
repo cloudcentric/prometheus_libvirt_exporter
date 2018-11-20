@@ -1,0 +1,31 @@
+#!/usr/bin/make -f
+# -*- makefile -*-
+
+# Uncomment this to turn on verbose mode.
+export DH_VERBOSE=1
+
+PKGDIR=debian/prometheus-libvirt-exporter
+
+%:
+	dh $@ 
+
+clean:
+	dh_clean
+
+binary-arch: clean
+	dh_prep
+	dh_installdirs
+#	mkdir -p $(PKGDIR)/usr/bin
+	dh_install
+	dh_systemd_enable
+#	dh_installinit
+	dh_strip
+	dh_compress
+	dh_fixperms
+	dh_installdeb
+	dh_gencontrol
+	dh_md5sums
+	dh_builddeb
+
+binary: binary-arch
+

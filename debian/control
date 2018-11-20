@@ -1,0 +1,13 @@
+Source: prometheus-libvirt-exporter
+Section: net
+Priority: extra
+Maintainer: Benjamin Reichel <b.reichel@syseleven.de>
+Build-Depends: adduser, debhelper (>= 9.0.0), dh-systemd
+Standards-Version: 3.9.8
+Homepage:  https://github.com/syseleven/prometheus_libvirt_exporter
+
+Package: prometheus-libvirt-exporter
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Built-Using: ${misc:Built-Using}
+Description: This package contains the prometheus exporter for libvirt
