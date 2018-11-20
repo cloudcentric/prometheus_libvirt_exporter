@@ -57,7 +57,7 @@ python-keystoneclient==3.10.0
 
 if you want to run exporter on host itself
 ```
-git clone https://github.com/syyeleven/prometheus_libvirt_exporter.git
+git clone https://github.com/syseleven/prometheus_libvirt_exporter.git
 pip install -r requirements.txt
 ```
 ### Running
