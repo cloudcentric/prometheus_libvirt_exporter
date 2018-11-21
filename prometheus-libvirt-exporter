@@ -10,7 +10,7 @@ set -o pipefail
 set -u
 
 # Get openstack credentials
-. /etc/openstack/source.rc
+. /etc/openstack/nova-openrc.sh
 
 # start prometheus-libvirt-exporter
 python /usr/bin/libvirt_exporter.py 
