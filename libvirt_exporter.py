@@ -48,71 +48,42 @@ uri = args["uniform_resource_identifier"]
 tenant_instance_cache = {}
 tenant_name_instance_cache = {}
 
-def add_tenant_instance_relation(uuid):
-
-        server = nova.servers.get(uuid)
-
-        tenant_instance_cache[server.id] = server.tenant_id
-
-        print(tenant_instance_cache)
-
 def update_tenant_instance_relation():
 
-    tenant_instance_cache.clear()
+	hostname = socket.gethostbyaddr(socket.gethostname())[0]
+	server = nova.servers.list(search_opts={"all_tenants": 1, "host": hostname})
 
-    hostname = socket.gethostbyaddr(socket.gethostname())[0]
-    server = nova.servers.list(search_opts={"all_tenants": 1, "host": hostname})
+	for srv in server:
+		tenant_instance_cache[srv.id] = srv.tenant_id
 
-    for srv in server:
-        tenant_instance_cache[srv.id] = srv.tenant_id
-
-    print(tenant_instance_cache)
-
-def add_tenant_name_instance_relation(uuid):
-
-        server = nova.servers.get(uuid)
-
-        project = keystone.projects.get(server.tenant_id)
-        tenant_name_instance_cache[server.id] = project.name
-
-        print(tenant_name_instance_cache)
+	print(tenant_instance_cache)
 
 def update_tenant_name_instance_relation():
 
-    tenant_name_instance_cache.clear()
+        hostname = socket.gethostbyaddr(socket.gethostname())[0]
+        server = nova.servers.list(search_opts={"all_tenants": 1, "host": hostname})
 
-    hostname = socket.gethostbyaddr(socket.gethostname())[0]
-    server = nova.servers.list(search_opts={"all_tenants": 1, "host": hostname})
+        for srv in server:
+             project = keystone.projects.get(srv.tenant_id)
+             tenant_name_instance_cache[srv.id] = project.name
 
-    for srv in server:
-         project = keystone.projects.get(srv.tenant_id)
-         tenant_name_instance_cache[srv.id] = project.name
-
-    print(tenant_name_instance_cache)
+        print(tenant_name_instance_cache)
 
 def get_tenant(uuid):
 
-    max_retries = 3
-    for i in range(max_retries):
-      try:
+    try:
         tenant_id = tenant_instance_cache[uuid]
-        return tenant_id
-      except KeyError as e:
-        add_tenant_instance_relation(uuid)
-        continue
-    return None
+    except KeyError as e:
+        tenant_id = None
+    return tenant_id
 
 def get_tenant_name(uuid):
 
-    max_retries = 3
-    for i in range(max_retries):
-      try:
+    try:
         tenant_name = tenant_name_instance_cache[uuid]
-        return tenant_name
-      except KeyError as e:
-        add_tenant_name_instance_relation(uuid)
-        continue
-    return None
+    except KeyError as e:
+        tenant_name = None
+    return tenant_name
 
 def connect_to_uri(uri):
     conn = libvirt.open(uri)
@@ -147,7 +118,6 @@ def get_metrics_collections(dom, metric_names, labels, stats):
     dimensions = []
     metrics_collection = {}
 
-    labels['uuid'] = dom.UUIDString()
     labels['project_id'] = get_tenant(dom.UUIDString())
     labels['project_name'] = get_tenant_name(dom.UUIDString())
 
