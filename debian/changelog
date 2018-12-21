@@ -1,3 +1,9 @@
+prometheus-libvirt-exporter (0.5+syseleven1) xenial; urgency=medium
+
+  * fix delete metrics for destroyed/migrated host
+
+ -- Benjamin Reichel <b.reichel@syseleven.de>  Thu, 21 Dec 2018 23:13:51 -0300
+
 prometheus-libvirt-exporter (0.4+syseleven1) xenial; urgency=medium
 
   * allow live-migration
