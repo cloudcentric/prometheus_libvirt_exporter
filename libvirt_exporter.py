@@ -192,7 +192,7 @@ def get_metrics_multidim_collections(dom, metric_names, device):
     return metrics_collection
 
 
-def add_metrics(dom, header_mn, g_dict):
+def add_metrics(dom, header_mn, g_dict, dom_list):
 
     labels = {'domain':dom.name()}
 
@@ -244,22 +244,23 @@ def add_metrics(dom, header_mn, g_dict):
 
             metric_help = 'help'
             labels_names = metrics_collection[mn][0][1].keys()
-
             g_dict[metric_name] = Gauge(metric_name, metric_help, labels_names)
 
             for dimension in dimensions:
                 dimension_metric_value = dimension[0]
                 dimension_label_values = dimension[1].values()
                 g_dict[metric_name].labels(*dimension_label_values).set(dimension_metric_value)
+                dom_list[dom.name()][metric_name] = dimension_label_values
         else:
             for dimension in dimensions:
                 dimension_metric_value = dimension[0]
                 dimension_label_values = dimension[1].values()
                 g_dict[metric_name].labels(*dimension_label_values).set(dimension_metric_value)
+                dom_list[dom.name()][metric_name] = dimension_label_values
     return g_dict
 
 
-def job(uri, g_dict, scheduler):
+def job(dom_list, uri, g_dict, scheduler):
     print('BEGIN JOB :', time.time())
     conn = connect_to_uri(uri)
     domains = get_domains(conn)
@@ -268,18 +269,31 @@ def job(uri, g_dict, scheduler):
         time.sleep(int(args["scrape_interval"]))
 
     for dom in domains:
+        if dom.name() in dom_list.keys():
+            dom_list[dom.name()].clear()
+
+    for key, value in dom_list.iteritems():
+        for d_key, d_value in value.iteritems():
+	    print("Start to remove ", d_key,d_value)
+            g_dict[d_key].remove(*d_value)
+
+    dom_list.clear()
+
+    for dom in domains:
 
         print(dom.name())
+        dom_list[dom.name()] = {}
 
         headers_mn = ["libvirt_cpu_stats_", "libvirt_mem_stats_", \
                       "libvirt_block_stats_", "libvirt_interface_"]
 
         for header_mn in headers_mn:
-            g_dict = add_metrics(dom, header_mn, g_dict)
+            g_dict = add_metrics(dom, header_mn, g_dict, dom_list)
+
 
     conn.close()
     print('FINISH JOB :', time.time())
-    scheduler.enter((int(args["scrape_interval"])), 1, job, (uri, g_dict, scheduler))
+    scheduler.enter((int(args["scrape_interval"])), 1, job, (dom_list, uri, g_dict, scheduler))
 
 def update_tenant(scheduler):
     print('Start updating tenant information', time.time())
@@ -292,11 +306,12 @@ def main():
     start_http_server(9177)
 
     g_dict = {}
+    dom_list = {}
 
     scheduler = sched.scheduler(time.time, time.sleep)
     print('START:', time.time())
     update_tenant(scheduler)
-    job(uri, g_dict, scheduler)
+    job(dom_list, uri, g_dict, scheduler)
     scheduler.run()
 
 if __name__ == '__main__':
