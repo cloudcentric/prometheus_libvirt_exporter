@@ -9,8 +9,9 @@ import socket
 from prometheus_client import start_http_server, Gauge
 from xml.etree import ElementTree
 
-import keystoneclient.session
-import keystoneclient.client
+from keystoneclient.v3 import client as keystoneclient
+from keystoneauth1.identity import v3
+from keystoneauth1 import session
 import novaclient.client
 import novaclient.exceptions
 
@@ -32,14 +33,16 @@ parser.add_argument(
           ' (Env: OS_INTERFACE)'),
 )
 
-keystoneclient.session.Session.register_cli_options(parser)
-keystoneclient.auth.register_argparse_arguments(
-    parser, sys.argv[1:], default="password")
 args_os = parser.parse_args()
-auth = keystoneclient.auth.load_from_argparse_arguments(args_os)
-keystonesession = keystoneclient.session.Session.load_from_cli_options(args_os, auth=auth)
-keystone = keystoneclient.client.Client(auth_url=auth.auth_url, session=keystonesession, interface=args_os.interface)
-nova = novaclient.client.Client("2", session=keystonesession, interface=args_os.interface, region_name=args_os.region)
+auth = v3.Password(user_domain_name=os.environ.get('OS_USER_DOMAIN_NAME'),
+                   username=os.environ.get('OS_USERNAME'),
+                   password=os.environ.get('OS_PASSWORD'),
+                   project_domain_name=os.environ.get('OS_PROJECT_DOMAIN_NAME'),
+                   project_name=os.environ.get('OS_PROJECT_NAME'),
+                   auth_url=os.environ.get('OS_AUTH_URL'))
+keystonesession = session.Session(auth=auth)
+keystone = keystoneclient.Client(session=keystonesession, endpoint_type=args_os.interface)
+nova = novaclient.client.Client("2", session=keystonesession, endpoint_type=args_os.interface, region_name=args_os.region)
 
 
 args = vars(parser.parse_args())
@@ -182,8 +185,14 @@ def get_metrics_multidim_collections(dom, metric_names, device):
             if device == "interface":
                 stats = dom.interfaceStats(target) # !
             elif device == "disk":
-                stats= dom.blockStats(target)
+                stats = list(dom.blockStats(target))
+                stats_flags = dom.blockStatsFlags(target, 0)
+                stats.append(stats_flags['wr_total_times'])
+                stats.append(stats_flags['rd_total_times'])
+                stats.append(stats_flags['flush_total_times'])
+                stats.append(stats_flags['flush_operations'])
             stats = dict(zip(metric_names, stats))
+            print(stats)
             dimension = [stats[mn], labels]
             dimensions.append(dimension)
             labels = None
@@ -216,7 +225,11 @@ def add_metrics(dom, header_mn, g_dict, dom_list):
         'read_bytes' ,
         'write_requests_issued',
         'write_bytes',
-        'errors_number']
+        'errors_number',
+        'writes_total_time',
+        'reads_total_time',
+        'flush_total_times',
+        'flush_operations']
 
         metrics_collection = get_metrics_multidim_collections(dom, metric_names, device="disk")
         unit = ""
