@@ -291,16 +291,17 @@ def job(dom_list, uri, g_dict, scheduler):
 
     dom_list.clear()
 
+    headers_mn = ["libvirt_cpu_stats_", "libvirt_mem_stats_", \
+                  "libvirt_block_stats_", "libvirt_interface_"]
+
     for dom in domains:
 
-        print(dom.name())
-        dom_list[dom.name()] = {}
+        if dom.isActive():
+            print(dom.name())
+            dom_list[dom.name()] = {}
 
-        headers_mn = ["libvirt_cpu_stats_", "libvirt_mem_stats_", \
-                      "libvirt_block_stats_", "libvirt_interface_"]
-
-        for header_mn in headers_mn:
-            g_dict = add_metrics(dom, header_mn, g_dict, dom_list)
+            for header_mn in headers_mn:
+                g_dict = add_metrics(dom, header_mn, g_dict, dom_list)
 
 
     conn.close()
