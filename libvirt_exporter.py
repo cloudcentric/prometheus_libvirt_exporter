@@ -193,7 +193,6 @@ def get_metrics_multidim_collections(dom, metric_names, device):
                 stats.append(stats_flags['flush_total_times'])
                 stats.append(stats_flags['flush_operations'])
             stats = dict(zip(metric_names, stats))
-            print(stats)
             dimension = [stats[mn], labels]
             dimensions.append(dimension)
             labels = None
@@ -317,7 +316,7 @@ def update_tenant(scheduler):
 
 def main():
 
-    start_http_server(args_os.port)
+    start_http_server(int(args_os.port))
 
     g_dict = {}
     dom_list = {}
