@@ -301,7 +301,10 @@ def job(dom_list, uri, g_dict, scheduler):
             dom_list[dom.name()] = {}
 
             for header_mn in headers_mn:
-                g_dict = add_metrics(dom, header_mn, g_dict, dom_list)
+                try:
+                    g_dict = add_metrics(dom, header_mn, g_dict, dom_list)
+                except:
+                    pass
 
 
     conn.close()
