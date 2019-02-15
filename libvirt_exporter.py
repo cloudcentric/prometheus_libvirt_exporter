@@ -287,7 +287,6 @@ def job(dom_list, uri, g_dict, scheduler):
 
     for key, value in dom_list.iteritems():
         for d_key, d_value in value.iteritems():
-            print("Start to remove ", d_key, d_value)
             g_dict[d_key].remove(*d_value)
 
     dom_list.clear()
