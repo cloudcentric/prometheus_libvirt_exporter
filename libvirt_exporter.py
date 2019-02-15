@@ -17,6 +17,7 @@ import novaclient.exceptions
 parser = argparse.ArgumentParser(description='libvirt_exporter scrapes domains metrics from libvirt daemon')
 parser.add_argument('-si','--scrape_interval', help='scrape interval for metrics in seconds', default= 5)
 parser.add_argument('-uri','--uniform_resource_identifier', help='Libvirt Uniform Resource Identifier', default= "qemu:///system")
+parser.add_argument('-p','--port', help='exporter port', default= "9177")
 
 parser.add_argument("-v", "--verbose", action="count")
 parser.add_argument("--no-disable", default=False, action="store_true")
@@ -303,7 +304,7 @@ def update_tenant(scheduler):
 
 def main():
 
-    start_http_server(9177)
+    start_http_server(args_os.port)
 
     g_dict = {}
     dom_list = {}
