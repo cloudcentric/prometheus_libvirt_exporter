@@ -296,7 +296,7 @@ def job(dom_list, uri, g_dict, scheduler):
 
     for dom in domains:
 
-        if dom.isActive():
+        try:
             print(dom.name())
             dom_list[dom.name()] = {}
 
@@ -305,6 +305,9 @@ def job(dom_list, uri, g_dict, scheduler):
                     g_dict = add_metrics(dom, header_mn, g_dict, dom_list)
                 except:
                     pass
+        except:
+            #VMs might vanish...
+            pass
 
 
     conn.close()
