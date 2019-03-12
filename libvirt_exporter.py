@@ -133,12 +133,17 @@ def get_domains(conn):
     domains = []
 
     for id in conn.listDomainsID():
-        dom = conn.lookupByID(id)
+        try:
+            dom = conn.lookupByID(id)
 
-        if dom == None:
-            print('Failed to find the domain ' + dom.name(), file=sys.stderr)
-        else:
-            domains.append(dom)
+            if dom == None:
+                print('Failed to find the domain ' + dom.name(), file=sys.stderr)
+            else:
+                domains.append(dom)
+        except:
+            #VMs might vanish...
+            pass
+        
 
     if len(domains) == 0:
         print('No running domains in URI')
